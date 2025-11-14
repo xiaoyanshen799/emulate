@@ -1,0 +1,39 @@
+# Use the official Ubuntu image as a base
+FROM ubuntu:latest
+
+# Set environment variables to avoid prompts during package installation
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Update the package list and install Python and venv
+RUN apt update && apt install -y \
+    python3 \
+    python3-venv \
+    python3-pip \
+    python3-dev \
+    iperf3 \
+    net-tools \
+    iputils-ping \
+    iproute2 \
+    nano \
+    curl \
+    ethtool \
+    sed \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set the working directory inside the container
+WORKDIR /app
+
+# Copy the requirements file into the container
+COPY requirements.txt .
+
+COPY network_stats.sh .
+# Create a virtual environment and install dependencies
+RUN python3 -m venv venv && \
+    ./venv/bin/pip install --upgrade pip && \
+    ./venv/bin/pip install -r requirements.txt
+
+RUN sed -i '4i import os' venv/bin/flwr-serverapp
+RUN sed -i 's/sys.exit(flwr_serverapp())/flwr_serverapp()/g' venv/bin/flwr-serverapp
+RUN sed -i '/flwr_serverapp()/a \ \ \ \ os._exit(0)' venv/bin/flwr-serverapp
+
+CMD ["/bin/bash"]

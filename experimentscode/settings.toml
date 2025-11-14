@@ -1,0 +1,37 @@
+[topology]
+topo-type="gabriel"
+topo-size=15
+topo-variation=7
+clients-number=10
+switch-exclude=0.2
+enable-bg-traffic=false
+stp=true
+
+[topology.links]
+link-bw=100 # in Mbps
+link-delay="2ms"
+link-max-queue-size=1000 # in packet
+
+[bg-traffic]
+rate-std=10
+switch-time-mean=10
+switch-time-std=3
+concurrent-tcp=1
+
+[docker-client]
+mem-limit="3g"
+memswap-limit="3g"
+cpu-limit=1.0
+fl-imgname="fl_mininet_image:latest"
+bg-imgname="bg_mininet_image:latest"
+data-mount="/home/xiaoyan/simulate/experimentscode/data" # absolute path
+logs-mount="/home/xiaoyan/simulate/experimentscode/logs" # absolute path
+
+[sdn-controller]
+enable=false
+ip="11.66.33.46"
+port=6653
+
+[other]
+name="test15"
+logs-path="logs" # relative path

@@ -1,0 +1,42 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "federatedlearning"
+version = "1.0.0"
+description = ""
+license = "Apache-2.0"
+
+[tool.hatch.build.targets.wheel]
+packages = ["."]
+
+[tool.flwr.app]
+publisher = "osama"
+
+[tool.flwr.app.components]
+serverapp = "fedlearning.FlowerServer:app"
+clientapp = "fedlearning.FlowerClient:app"
+
+[tool.flwr.app.config]
+rounds = 20
+fraction-fit = 1.0
+local-epochs = 1
+batch-size = 32
+clients = 10
+dataset = "femnist"
+log = "logs/test15"
+zmq = false
+fl-server-address = "10.0.0.250"
+onos = "11.66.33.46"
+
+[tool.flwr.federations]
+default = "docker"
+
+[tool.flwr.federations.docker]
+address = "172.17.0.12:9093"
+insecure = true
+
+[tool.flwr.federations.local]
+address = "127.0.0.1:9093"
+insecure = true

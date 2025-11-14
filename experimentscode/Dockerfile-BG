@@ -1,0 +1,24 @@
+# Use the official Ubuntu image as a base
+FROM ubuntu:latest
+
+# Set environment variables to avoid prompts during package installation
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Update the package list and install Python and venv
+RUN apt update && apt install -y \
+    iperf3 \
+    net-tools \
+    iputils-ping \
+    iproute2 \
+    ethtool \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set the working directory inside the container
+WORKDIR /app
+
+# Now copy the rest of the application files
+COPY network_stats.sh .
+COPY start_iperf.sh .
+
+# Set the command to start an interactive shell
+CMD ["/bin/bash"]
