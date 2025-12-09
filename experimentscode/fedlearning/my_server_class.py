@@ -19,13 +19,16 @@ def fit_client(
 ) -> tuple[ClientProxy, FitRes]:
     """Refine parameters on a single client."""
     client_round_start_time = timeit.default_timer()
-    fit_res = None
+    fit_res: Optional[FitRes] = None
     try:
         fit_res = client.fit(ins, timeout=timeout, group_id=group_id)
     except Exception as exc:
         tb_str = traceback.format_exc()
         logger.error("Failed to fit client %s to server. Traceback: %s", client.cid, tb_str)
+        raise
     client_round_finish_time = timeit.default_timer()
+    if fit_res is None:
+        raise RuntimeError(f"Client {client.cid} returned no FitRes")
     fit_res.metrics["client_round_start_time"] = client_round_start_time
     fit_res.metrics["client_round_finish_time"] = client_round_finish_time
     return client, fit_res
@@ -111,19 +114,8 @@ class MyServer(Server):
         """Run federated averaging for a number of rounds."""
         history = History()
 
-        # Initialize parameters
         self.logger.info("[INIT]")
         self.parameters = self._get_initial_parameters(server_round=0, timeout=timeout)
-        self.logger.info("Starting evaluation of initial global parameters")
-        res = self.strategy.evaluate(0, parameters=self.parameters)
-        if res is not None:
-            self.logger.info(f"initial parameters (loss, other metrics): {res[0]}, {res[1]}")
-            history.add_loss_centralized(server_round=0, loss=res[0])
-            history.add_metrics_centralized(server_round=0, metrics=res[1])
-        else:
-            self.logger.info("Evaluation returned no results (`None`)")
-
-        # Run federated learning for num_rounds
 
         start_time = timeit.default_timer()
         self.client_wise_log.writerow([
@@ -172,17 +164,6 @@ class MyServer(Server):
                     self.logger.info(f"Reaching Accuracy Level, Breaking!")
                     break
 
-            # Evaluate model on a sample of available clients
-            res_fed = self.evaluate_round(server_round=current_round, timeout=timeout)
-            if res_fed is not None:
-                loss_fed, evaluate_metrics_fed, _ = res_fed
-                if loss_fed is not None:
-                    history.add_loss_distributed(
-                        server_round=current_round, loss=loss_fed
-                    )
-                    history.add_metrics_distributed(
-                        server_round=current_round, metrics=evaluate_metrics_fed
-                    )
             self.client_wise_file.flush()
             self.overall_log_file.flush()
 
